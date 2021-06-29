@@ -14,7 +14,7 @@ import { useToast } from "@chakra-ui/react";
 
 import { Spinner, Center } from "@chakra-ui/react";
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
 
 import { useQuery, useMutation } from "@apollo/client";
 import { GET_EMPLOYEES, ADD_EMPLOYEE, DELETE_EMPLOYEE } from "./client/client";
@@ -23,6 +23,7 @@ import { GET_EMPLOYEES, ADD_EMPLOYEE, DELETE_EMPLOYEE } from "./client/client";
 function App() {
   return (
     <Container maxW="container.xl">
+     
       <VStack
         boxShadow="md"
         mt={50}
@@ -47,6 +48,10 @@ function EmployeeTable() {
   const { data, loading } = useQuery(GET_EMPLOYEES);
   const [delete_employee] = useMutation(DELETE_EMPLOYEE);
   const toast = useToast();
+
+  const editEmployee = ({ id }) => {
+    alert(id);
+  };
 
   const deleteEmployee = ({ id }) => {
     const isConfirmed = window.confirm(
@@ -107,9 +112,6 @@ function EmployeeTable() {
         {data.employees.map((employee) => (
           <Tr
             _hover={{ bg: "#E2E8F0", cursor: "pointer" }}
-            onDoubleClick={() => {
-              alert(employee.id);
-            }}
             id={employee.id}
             key={employee.id}
           >
@@ -120,7 +122,14 @@ function EmployeeTable() {
             <Td>{employee.telephone}</Td>
             <Td>{employee.email}</Td>
             <Td>
-              <Button _hover={{ bg: "green" }} mr="2" bg="black" color="white">
+              <Button
+                
+                // onClick={() => editEmployee(employee)}
+                _hover={{ bg: "green" }}
+                mr="2"
+                bg="black"
+                color="white"
+              >
                 Edit
               </Button>
               <Button
@@ -139,7 +148,7 @@ function EmployeeTable() {
   );
 }
 
-function AddEmployee() {
+function AddEmployee(props) {
   const [addEmployee, { loading }] = useMutation(ADD_EMPLOYEE);
   const toast = useToast();
   const nameRef = useRef();
@@ -170,7 +179,7 @@ function AddEmployee() {
     }).then(() => {
       document.getElementById("employee_form").reset();
       toast({
-        title: "Meetup Saved Successfully!",
+        title: "Employee Saved Successfully!",
         status: "success",
         duration: 5000,
         isClosable: true,
@@ -185,50 +194,27 @@ function AddEmployee() {
       <Flex>
         <Center>
           <Stack spacing={5} m="5">
-            <Input type="text" placeholder="Name" ref={nameRef} required />
+            <Input type="text" placeholder="Name" ref={nameRef} />
 
-            <Input
-              type="text"
-              placeholder="Surname"
-              ref={surnameRef}
-              required
-            />
+            <Input type="text" placeholder="Surname" ref={surnameRef} />
           </Stack>
 
           <Stack spacing={5}>
-            <Input
-              type="text"
-              placeholder="Address"
-              ref={addressRef}
-              required
-            />
+            <Input type="text" placeholder="Address" ref={addressRef} />
 
-            <Input
-              type="text"
-              placeholder="Post Code"
-              ref={postcodeRef}
-              required
-            />
+            <Input type="text" placeholder="Post Code" ref={postcodeRef} />
           </Stack>
 
           <Stack spacing={5} m="5">
-            <Input
-              type="text"
-              placeholder="Telephone"
-              ref={telephoneRef}
-              required
-            />
+            <Input type="text" placeholder="Telephone" ref={telephoneRef} />
 
-            <Input
-              type="text"
-              placeholder="Email Address"
-              ref={emailRef}
-              required
-            />
+            <Input type="text" placeholder="Email Address" ref={emailRef} />
           </Stack>
 
           <Stack spacing={5}>
-            <Button isLoading={loading} onClick={saveEmployee}>Save</Button>
+            <Button isLoading={loading} onClick={saveEmployee}>
+              Save
+            </Button>
           </Stack>
         </Center>
       </Flex>
