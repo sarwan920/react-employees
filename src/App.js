@@ -14,25 +14,27 @@ import { useToast } from "@chakra-ui/react";
 
 import { Spinner, Center } from "@chakra-ui/react";
 
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState } from "react";
 
 import { useQuery, useMutation } from "@apollo/client";
-import { GET_EMPLOYEES, ADD_EMPLOYEE, DELETE_EMPLOYEE } from "./client/client";
+import { GET_EMPLOYEES, ADD_EMPLOYEE, DELETE_EMPLOYEE, UPDATE_EMPLOYEE } from "./client/client";
 
 //MAIN APP FUNCTION COMPONENT
 function App() {
-  const [addEmployee, { loading: addEmployees }] = useMutation(ADD_EMPLOYEE);
+  const [addEmployee, { loading: addEmployeesLoading }] = useMutation(ADD_EMPLOYEE);
   const { data, loading: getEmployees } = useQuery(GET_EMPLOYEES);
   const [delete_employee] = useMutation(DELETE_EMPLOYEE);
+  const [update_employee , { loading:updateEmployeesLoading }] = useMutation(UPDATE_EMPLOYEE);
   const toast = useToast();
 
   const [edit, setEdit] = useState(false);
+
+  const [employeeId, setEmployeeId] = useState();
 
 
 
   const addNewEmployee = () => {
     setEdit(false);
-    console.log(edit);
     document.getElementById("employee_form").reset();
   }
 
@@ -45,11 +47,58 @@ function App() {
   const telephoneRef = useRef();
   const emailRef = useRef();
 
-  const updateEmployee=()=>{
-    console.log('Update Employee');
+
+
+  const updateEmployee = () => {
+    console.log(employeeId)
+    const updatedName = nameRef.current.value;
+    const updatedSurname = surnameRef.current.value;
+    const updatedAddress = addressRef.current.value;
+    const updatedPostcode = postcodeRef.current.value;
+    const updatedTelephone = telephoneRef.current.value;
+    const updatedEmail = emailRef.current.value;
+
+    update_employee({
+      variables: {
+        id: employeeId,
+        name: updatedName,
+        surname: updatedSurname,
+        address: updatedAddress,
+        postcode: updatedPostcode,
+        telephone: updatedTelephone,
+        email: updatedEmail
+      },
+      optimisticResponse: true,
+      update: (cache) => {
+        const existingEmployees = cache.readQuery({ query: GET_EMPLOYEES });
+        const newEmployees = existingEmployees.employees.map(e => {
+          if (e.id === employeeId) {
+            return { ...e, name: e.name, surname: e.surname, address: e.address, postcode: e.postcode, telephone: e.telephone, email: e.email };
+          } else {
+            return e;
+          }
+        });
+        cache.writeQuery({
+          query: GET_EMPLOYEES,
+          data: { employees: newEmployees }
+        });
+      }
+    }).then(()=>{
+      document.getElementById('employee_form').reset();
+      toast({
+        title: "Employee Updated Successfully!",
+        status: "success",
+        duration: 5000,
+        isClosable: true,
+        position: "top",
+        variant: "top-accent",
+      });
+      setEdit(false);
+    })
+
   }
 
-  const saveEmployee = (event) => {
+  const saveEmployee = () => {
     const enteredName = nameRef.current.value;
     const enteredSurname = surnameRef.current.value;
     const enteredAddress = addressRef.current.value;
@@ -119,7 +168,7 @@ function App() {
     postcodeRef.current.value = employee.postcode;
     telephoneRef.current.value = employee.telephone;
     emailRef.current.value = employee.email;
-
+    setEmployeeId(employee.id);
     console.log(edit);
 
 
@@ -185,11 +234,11 @@ function App() {
                 </Stack>
 
                 <Stack spacing={5}>
-                  <Button isLoading={addEmployees} onClick={ !edit ?  saveEmployee :updateEmployee}>
+                  <Button isLoading={ !edit ? addEmployeesLoading: updateEmployeesLoading} onClick={!edit ? saveEmployee : updateEmployee}>
                     Save
                   </Button>
-                  { edit && <Button>Cancel</Button> }
-                    
+                  {edit && <Button onClick={() => { setEdit(false); document.getElementById('employee_form').reset() }}>Cancel</Button>}
+
 
                 </Stack>
               </Center>
